@@ -1,0 +1,15 @@
+dashboards:
+  home-cluster-overview:
+    gnetId: 1860 # Node Exporter Full
+    revision: 37
+    datasource: Prometheus
+  
+  postgres-ha-overview:
+    gnetId: 9628 # PostgreSQL Database
+    revision: 7
+    datasource: Prometheus
+
+  redis-ha-overview:
+    gnetId: 11835 # Redis Dashboard for Prometheus Redis Exporter
+    revision: 1
+    datasource: Prometheus

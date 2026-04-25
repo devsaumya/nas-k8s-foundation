@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: nas-k8s-foundation
+  description: "Platform Engineering core: Argo CD, Linkerd, Monitoring, and Identity systems."
+  annotations:
+    github.com/project-slug: devsaumya/nas-k8s-foundation
+    argocd/app-name: argo-cd
+spec:
+  type: platform
+  lifecycle: production
+  owner: saumya
+  system: home-platform
