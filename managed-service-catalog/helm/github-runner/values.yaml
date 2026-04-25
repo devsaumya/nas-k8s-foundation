@@ -1,0 +1,12 @@
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+
+github-runner:
+  controller:
+    enabled: true
+  runner:
+    repository: "devsaumya/home-platform-engg-devops" # User's repo
+    replicas: 1
+    existingSecret: github-runner-secret

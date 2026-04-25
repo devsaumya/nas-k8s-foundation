@@ -1,0 +1,13 @@
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+
+multus:
+  image:
+    repository: ghcr.io/k8snetworkplumbingwg/multus-cni
+    tag: v4.0.2
+  config:
+    cniVersion: "0.3.1"
+    # The default CNI to delegate to (k3s uses flannel or canal)
+    defaultNetworkName: "flannel" 

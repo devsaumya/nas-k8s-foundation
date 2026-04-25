@@ -1,0 +1,23 @@
+{{- if .Values.macvlan.enabled }}
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: adguard-macvlan
+  namespace: dns-system
+spec:
+  config: '{
+      "cniVersion": "0.3.1",
+      "type": "macvlan",
+      "master": "{{ .Values.macvlan.masterInterface }}",
+      "mode": "bridge",
+      "ipam": {
+        "type": "static",
+        "addresses": [
+          {
+            "address": "{{ .Values.macvlan.ipAddress }}/24",
+            "gateway": "{{ .Values.macvlan.gateway }}"
+          }
+        ]
+      }
+    }'
+{{- end }}

@@ -1,0 +1,14 @@
+macvlan:
+  enabled: true
+  masterInterface: eth0 # Should be checked on the node
+  ipAddress: 192.168.1.53
+  subnet: 192.168.1.0/24
+  gateway: 192.168.1.1
+
+storage:
+  size: 10Gi
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"

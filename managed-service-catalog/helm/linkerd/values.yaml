@@ -1,0 +1,14 @@
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+
+linkerd-control-plane:
+  identity:
+    issuer:
+      scheme: kubernetes.io/tls
+  proxy:
+    image:
+      name: cr.l5d.io/linkerd/proxy
+  healthCheck:
+    enabled: true

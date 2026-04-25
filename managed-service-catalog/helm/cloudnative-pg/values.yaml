@@ -1,0 +1,9 @@
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+
+cloudnative-pg:
+  monitoring:
+    podMonitor:
+      enabled: true

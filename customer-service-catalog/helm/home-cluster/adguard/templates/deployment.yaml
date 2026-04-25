@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adguard-home
+  namespace: dns-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "6"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adguard-home
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.macvlan.enabled }}
+        k8s.v1.cni.cncf.io/networks: adguard-macvlan
+        {{- end }}
+      labels:
+        app: adguard-home
+    spec:
+      containers:
+      - name: adguard-home
+        image: adguard/adguardhome:latest
+        ports:
+        - name: dns-udp
+          containerPort: 53
+          protocol: UDP
+        - name: dns-tcp
+          containerPort: 53
+          protocol: TCP
+        - name: admin
+          containerPort: 3000
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /opt/adguardhome/conf
+        - name: work
+          mountPath: /opt/adguardhome/work
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: adguard-config
+      - name: work
+        persistentVolumeClaim:
+          claimName: adguard-work

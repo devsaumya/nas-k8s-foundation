@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-external
+  namespace: infra
+spec:
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: minio-external
+  namespace: infra
+subsets:
+  - addresses:
+      - ip: {{ .Values.ingress.nasIp }}
+    ports:
+      - name: api
+        port: 9000
+      - name: console
+        port: 9001
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minio
+  namespace: infra
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: s3.{{ .Values.ingress.domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-external
+                port:
+                  name: api
+    - host: minio.{{ .Values.ingress.domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: minio-external
+                port:
+                  name: console
+  tls:
+    - hosts:
+        - s3.{{ .Values.ingress.domain }}
+        - minio.{{ .Values.ingress.domain }}
+      secretName: tls-minio

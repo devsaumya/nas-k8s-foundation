@@ -1,0 +1,18 @@
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+
+tempo:
+  tempo:
+    repository: grafana/tempo
+    tag: 2.3.1
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+  persistence:
+    enabled: true
+    storageClass: "default"
+    size: 10Gi

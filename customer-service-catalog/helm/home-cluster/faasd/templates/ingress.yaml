@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: faasd-external
+  namespace: infra
+spec:
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: faasd-external
+  namespace: infra
+subsets:
+  - addresses:
+      - ip: {{ .Values.ingress.nodeIp }}
+    ports:
+      - name: http
+        port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: faasd
+  namespace: infra
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: faas.{{ .Values.ingress.domain }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: faasd-external
+                port:
+                  name: http
+  tls:
+    - hosts:
+        - faas.{{ .Values.ingress.domain }}
+      secretName: tls-faasd

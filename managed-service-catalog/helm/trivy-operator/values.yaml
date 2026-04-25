@@ -1,0 +1,12 @@
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+
+trivy-operator:
+  trivy:
+    ignoreUnfixed: true
+  serviceMonitor:
+    enabled: true
+  operator:
+    builtInTrivyServer: true
