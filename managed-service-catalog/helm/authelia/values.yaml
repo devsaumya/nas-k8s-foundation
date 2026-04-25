@@ -1,0 +1,19 @@
+image:
+  repository: authelia/authelia
+  tag: v4.38.0
+
+domain: "yourdomain.com"
+
+ldap:
+  address: "ldap://lldap.identity-system.svc.cluster.local:3890"
+  base_dn: "dc=home,dc=cluster"
+
+persistence:
+  enabled: true
+  storageClass: default
+  size: 1Gi
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"

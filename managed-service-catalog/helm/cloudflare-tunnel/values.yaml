@@ -1,0 +1,12 @@
+image:
+  repository: cloudflare/cloudflared
+  tag: 2024.2.1
+
+tunnel:
+  existingSecret: cloudflare-tunnel-secret
+  tunnelID: "" # To be filled via Bitwarden
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"

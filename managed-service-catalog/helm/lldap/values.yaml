@@ -1,0 +1,19 @@
+image:
+  repository: lldap/lldap
+  tag: v0.5.0-alpine
+
+config:
+  ldapPort: 3890
+  httpPort: 17170
+  baseDn: "dc=home,dc=cluster"
+  adminUser: "admin"
+
+persistence:
+  enabled: true
+  storageClass: default
+  size: 1Gi
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
