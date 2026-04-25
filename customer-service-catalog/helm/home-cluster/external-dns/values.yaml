@@ -1,0 +1,78 @@
+externalSecrets:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: bitwarden-store
+
+  secretStores:
+    home-cluster-prod:
+      kind: ClusterSecretStore
+      name: bitwarden-store
+
+  secrets:
+    external-dns-webhook:
+      secretStoreRef: home-cluster-prod
+      data:
+        - remoteKey: dns_zone_admin
+          remoteKeyProperty: project_id
+          secretKey: PROJECT_ID
+        - remoteKey: dns_zone_admin
+          remoteKeyProperty: sa_key_json
+          secretKey: SA_KEY_JSON
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+external-dns:
+  txtOwnerId: home-cluster-prod
+  domainFilters:
+    - home.yourdomain.com
+  extraArgs:
+    - --source=traefik-proxy
+  rbac:
+    create: true
+    additionalPermissions:
+      - apiGroups: ["traefik.io"]
+        resources:
+          - ingressroutes
+          - ingressroutetcps
+          - ingressrouteudps
+          - tlsoptions
+          - tlsstores
+        verbs: ["get", "watch", "list"]
+      - apiGroups: [""]
+        resources:
+          - "namespaces"
+        verbs: ["get", "watch", "list"]
+  extraVolumes:
+    - name: stackit-sa-authentication
+      secret:
+        secretName: external-dns-webhook
+        items:
+          - key: SA_KEY_JSON
+            path: sa_key.json
+  global:
+    imagePullSecrets:
+      - name: image-pull-secret
+    security:
+      allowInsecureImages: true
+  provider:
+    webhook:
+      image:
+        repository: ghcr.io/stackitcloud/external-dns-stackit-webhook
+        tag: v0.3.2
+      extraVolumeMounts:
+        - name: stackit-sa-authentication
+          mountPath: /var/run/secrets/stackit
+      env:
+        - name: AUTH_KEY_PATH
+          value: /var/run/secrets/stackit/sa_key.json
+        - name: PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: external-dns-webhook
+              key: PROJECT_ID
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      monitoring.instance: "home-cluster-prod"

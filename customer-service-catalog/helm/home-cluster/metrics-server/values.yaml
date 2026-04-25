@@ -1,0 +1,11 @@
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+metrics-server:
+  imagePullSecrets:
+    - name: image-pull-secret
+  serviceMonitor:
+    additionalLabels:
+      monitoring:
+        instance: "home-cluster-prod"

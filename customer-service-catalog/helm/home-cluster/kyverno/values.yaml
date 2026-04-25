@@ -1,0 +1,38 @@
+crds:
+  install: true
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+
+kyverno:
+  global:
+    imagePullSecrets:
+      - name: image-pull-secret
+  admissionController:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        monitoring.instance: "home-cluster-prod"
+  backgroundController:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        monitoring.instance: "home-cluster-prod"
+  cleanupController:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        monitoring.instance: "home-cluster-prod"
+  reportsController:
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        monitoring.instance: "home-cluster-prod"
+  # FIX: https://github.com/kyverno/kyverno/issues/15116
+  kyverno-api:
+    labels:
+      app.kubernetes.io/managed-by: Helm
+    annotations:
+      meta.helm.sh/release-name: kyverno

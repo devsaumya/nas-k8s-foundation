@@ -1,0 +1,228 @@
+kube-prometheus-stack:
+  global:
+    imagePullSecrets:
+      - name: image-pull-secret
+    imageRegistry: ""
+  prometheusOperator:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+    prometheus:
+      monitor:
+        additionalLabels:
+          monitoring.instance: home-cluster-prod
+  prometheus:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+    ingress:
+      ingressClassName: traefik
+      annotations:
+
+        cert-manager.io/cluster-issuer: letsencrypt-staging
+        traefik.ingress.kubernetes.io/router.middlewares: oauth2-proxy-oauth-auth@kubernetescrd
+      enabled: true
+      paths:
+        - /prometheus
+      pathType: ImplementationSpecific
+      hosts:
+        - home.yourdomain.com
+      tls:
+        - secretName: tls-prometheus
+          hosts:
+            - home.yourdomain.com
+
+
+    prometheusSpec:
+      retention: 10d
+      serviceMonitorSelector:
+        matchLabels:
+          monitoring.instance: home-cluster-prod
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            storageClassName: "default"
+            resources:
+              requests:
+                storage: 10Gi
+      externalUrl: https://home.yourdomain.com/prometheus
+      routePrefix: /prometheus
+    thanosServiceMonitor:
+      serviceMonitor:
+        additionalLabels:
+          monitoring.instance: home-cluster-prod
+  alertmanager:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+    ingress:
+      ingressClassName: traefik
+      annotations:
+
+        cert-manager.io/cluster-issuer: letsencrypt-staging
+        traefik.ingress.kubernetes.io/router.middlewares: oauth2-proxy-oauth-auth@kubernetescrd
+      enabled: true
+      paths:
+        - /alertmanager
+      pathType: ImplementationSpecific
+      hosts:
+        - home.yourdomain.com
+      tls:
+        - secretName: tls-alertmanager
+          hosts:
+            - home.yourdomain.com
+
+
+# Below is an example alertmanager.config section:
+# It demonstrates an advanced routing setup that includes Microsoft Teams (v2), a watchdog receiver
+# (e.g. for UptimeRobot) and a silenced route for informational alerts.
+# This config use webhook urls from secret-files (see alertmanagerSpec below)
+#
+    config:
+      route:
+        receiver: msteams-notifications
+        routes:
+          - receiver: "null"
+            matchers:
+              - alertname =~ "InfoInhibitor"
+          - receiver: uptimerobot
+            repeat_interval: 1m
+            matchers:
+              - alertname =~ "Watchdog"
+          - receiver: 'msteams-notifications'
+            matchers:
+              - severity =~ "warning|critical"
+            continue: true
+      receivers:
+        - name: 'msteams-notifications'
+          msteamsv2_configs:
+            - send_resolved: true
+              webhook_url_file: /etc/alertmanager/secrets/alertmanager-webhooks/msteams-webhook-url
+        - name: uptimerobot
+          webhook_configs:
+            - url_file: /etc/alertmanager/secrets/alertmanager-webhooks/uptimerobot-webhook-url
+        - name: "null"
+
+    alertmanagerSpec:
+      # secrets for alertmanager config webhook urls
+      secrets:
+        - alertmanager-webhooks
+
+      externalUrl: https://home.yourdomain.com/alertmanager
+      routePrefix: /alertmanager
+
+  kube-state-metrics:
+    prometheus:
+      monitor:
+        additionalLabels:
+          monitoring.instance: home-cluster-prod
+  kubeApiServer:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+  kubelet:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+  kubeControllerManager:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+  coreDns:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+  kubeDns:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+  kubeScheduler:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+  thanosRuler:
+    serviceMonitor:
+      additionalLabels:
+        monitoring.instance: home-cluster-prod
+  grafana:
+    admin:
+      existingSecret: grafana-admin-credentials
+      userKey: admin-user
+      passwordKey: admin-password
+    serviceMonitor:
+      labels:
+        monitoring.instance: home-cluster-prod
+    ingress:
+      ingressClassName: traefik
+      annotations:
+
+        cert-manager.io/cluster-issuer: letsencrypt-staging
+        traefik.ingress.kubernetes.io/router.middlewares: oauth2-proxy-oauth-auth@kubernetescrd
+      enabled: true
+      path: /grafana
+      pathType: ImplementationSpecific
+      hosts:
+        - home.yourdomain.com
+      tls:
+        - secretName: tls-grafana
+          hosts:
+            - home.yourdomain.com
+    envFromSecrets:
+      - name: oauth2-credentials
+    grafana.ini:
+      server:
+        root_url: https://home.yourdomain.com/grafana/
+        serve_from_sub_path: true
+      auth.github:
+        name: "Github"
+        enabled: true
+        client_id: ${client-id}
+        client_secret: ${client-secret}
+        allow_sign_up: true
+        auto_login: false
+        scopes: "user:email,read:org"
+        allowed_organizations: "[\"<no value>\"]"
+        role_attribute_path: contains(groups[*], '@<no value>/<no value>') && 'Admin' || 'Viewer'
+    additionalDataSources:
+      - access: proxy
+        isDefault: false
+        name: loki
+        type: loki
+        url: http://loki-headless.loki.svc.cluster.local:3100
+        version: 1
+prometheus-blackbox-exporter:
+  image:
+    pullSecrets:
+      - image-pull-secret
+  global:
+    imageRegistry: quay.io
+
+externalSecrets:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: bitwarden-store
+
+  secretStores:
+    home-cluster-prod:
+      kind: ClusterSecretStore
+      name: bitwarden-store
+
+  secrets:
+    grafana-admin-credentials:
+      secretStoreRef: home-cluster-prod
+      dataFrom:
+        - remoteKey: grafana_credentials
+    oauth2-credentials:
+      secretStoreRef: home-cluster-prod
+      dataFrom:
+        - remoteKey: grafana_oauth2_credentials
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/warn: privileged

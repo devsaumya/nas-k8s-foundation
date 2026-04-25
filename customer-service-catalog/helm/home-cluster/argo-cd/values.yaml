@@ -1,0 +1,177 @@
+bootstrapValues:
+  dockerPullSecrets:
+    image-pull-secret:
+      name: image-pull-secret
+      matchNamespaceLabels:
+        project-name: "home-cluster"
+        stage: "prod"
+      secretStoreRef:
+        kind: ClusterSecretStore
+        name: "home-cluster-prod"
+      remoteRef:
+        remoteKey: docker_config
+        remoteKeyProperty: pull-secret
+  projects:
+    home-cluster-prod:
+      name: "home-cluster-prod"
+      namespace: argocd
+      description: "home-cluster-prod project"
+      orphanedResources:
+        warn: false
+        ignore:
+          - kind: Secret
+            name: cert-manager-webhook-ca
+
+  applicationSets:
+    home-cluster-prod:
+      projectName: "home-cluster-prod"
+      managedServices:
+        repoURL: "https://github.com/saumya/nas-k8s-foundation"
+        path: "managed-service-catalog/helm"
+        targetRevision: "main"
+      customerServices:
+        repoURL: "https://github.com/saumya/nas-k8s-foundation"
+        path: "customer-service-catalog/helm"
+        targetRevision: "main"
+      apps:
+        argocd:
+          name: argocd
+          path: argo-cd
+        kyverno:
+          name: kyverno
+          path: kyverno
+        kyverno-policies:
+          name: kyverno-policies
+          path: kyverno-policies
+        external-secrets:
+          name: external-secrets
+          path: external-secrets
+        cert-manager:
+          name: cert-manager
+          path: cert-manager
+        metallb:
+          name: metallb
+          path: metallb
+        external-dns:
+          name: external-dns
+          path: external-dns
+        oauth2-proxy:
+          name: oauth2-proxy
+          path: oauth2-proxy
+        longhorn:
+          name: longhorn
+          path: longhorn
+        kube-prometheus-stack:
+          name: kube-prometheus-stack
+          path: kube-prometheus-stack
+        loki:
+          name: loki
+          path: loki
+        kyverno-policy-reporter:
+          name: kyverno-policy-reporter
+          path: kyverno-policy-reporter
+        homer-dashboard:
+          name: homer-dashboard
+          path: homer-dashboard
+        metrics-server:
+          name: metrics-server
+          path: metrics-server
+        traefik:
+          name: traefik
+          path: traefik
+
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+inClusterName: home-cluster
+inClusterSecretLabels:
+##Controlplane labels
+  argocd: "enabled"
+  cert-manager: "enabled"
+  external-dns: "disabled"
+  external-secrets: "enabled"
+  kube-prometheus-stack: "enabled"
+  traefik: "enabled"
+  kyverno: "disabled"
+  kyverno-policies: "disabled"
+  kyverno-policy-reporter: "disabled"
+  loki: "enabled"
+  homer-dashboard: "enabled"
+  oauth2-proxy: "enabled"
+  metrics-server: "enabled"
+  metallb: "disabled"
+  longhorn: "disabled"
+
+
+externalSecrets:
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: bitwarden-store
+
+  secretStores:
+    home-cluster-prod:
+      kind: ClusterSecretStore
+      name: bitwarden-store
+
+
+  secrets:
+    oauth2-credentials:
+      secretStoreRef: home-cluster-prod
+      dataFrom:
+        - remoteKey: argo_oauth2_credentials
+argo-cd:
+  server:
+    ingressGrpc:
+      enabled: true
+      path: "/argocd"
+      ingressClassName: traefik
+      tls: true
+      annotations:
+        
+        cert-manager.io/cluster-issuer: letsencrypt-staging
+    ingress:
+      enabled: true
+      path: "/argocd"
+      ingressClassName: traefik
+      tls: true
+      annotations:
+        
+        cert-manager.io/cluster-issuer: letsencrypt-staging
+        traefik.ingress.kubernetes.io/router.middlewares: oauth2-proxy-oauth-auth@kubernetescrd
+  configs:
+    cm:
+      url: https://home.yourdomain.com/argocd
+      dex.config: |
+        connectors:
+          - type: github
+            id: github
+            name: GitHub
+            config:
+              clientID: $oauth2-credentials:client-id
+              clientSecret: $oauth2-credentials:client-secret
+              orgs:
+                - name: <no value>
+    rbac:
+      policy.default: role:readonly
+      policy.csv: |
+        g, <no value>:<no value>, role:admin
+    params:
+      server.rootpath: /argocd
+      server.basehref: /argocd
+      server.insecure: true
+  global:
+    domain: home.yourdomain.com
+    revisionHistoryLimit: 5
+    imagePullSecrets:
+      - name: image-pull-secret
+  controller:
+    metrics:
+      enabled: true
+      rules:
+        enabled: false
+      serviceMonitor:
+        enabled: true
+        additionalLabels:
+          monitoring.instance: "home-cluster-prod"

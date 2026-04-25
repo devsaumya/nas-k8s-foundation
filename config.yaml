@@ -1,0 +1,47 @@
+clusters:
+  - name: home-cluster
+    stage: prod
+    dnsName: home.yourdomain.com
+    argocd:
+      repo:
+        https:
+          customer:
+            url: https://github.com/saumya/nas-k8s-foundation
+          managed:
+            url: https://github.com/saumya/nas-k8s-foundation
+    services:
+      argocd:
+        status: enabled
+      certManager:
+        status: enabled
+        clusterIssuer:
+          name: letsencrypt-staging
+          email: admin@yourdomain.com
+      externalDns:
+        status: disabled
+      externalSecrets:
+        status: enabled
+      kubePrometheusStack:
+        status: enabled
+        storageClassName: default
+      traefik:
+        status: enabled
+      kyverno:
+        status: disabled
+      kyvernoPolicies:
+        status: disabled
+      kyvernoPolicyReport:
+        status: disabled
+      loki:
+        status: enabled
+        storageClassName: default
+      homerDashboard:
+        status: enabled
+      oauth2Proxy:
+        status: enabled
+      metricsServer:
+        status: enabled
+      metalLb:
+        status: disabled
+      longhorn:
+        status: disabled

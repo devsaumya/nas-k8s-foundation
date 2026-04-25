@@ -1,0 +1,33 @@
+clusterSecretStores:
+  bitwarden:
+    name: "bitwarden-store"
+    provider:
+      bitwarden:
+        auth:
+          secretRef:
+            credentials:
+              name: "bitwarden-access-token"
+              key: "token"
+              namespace: "external-secrets"
+        # The bitwarden-sdk-server address within the cluster
+        organizationID: "${BITWARDEN_ORG_ID}"
+
+namespace:
+  labels:
+    project-name: "home-cluster"
+    stage: "prod"
+external-secrets:
+  certController:
+    imagePullSecrets:
+      - name: image-pull-secret
+  webhook:
+    imagePullSecrets:
+      - name: image-pull-secret
+  imagePullSecrets:
+    - name: image-pull-secret
+  serviceMonitor:
+    enabled: true
+    additionalLabels:
+      monitoring.instance: "home-cluster-prod"
+  bitwarden-sdk-server:
+    enabled: true
