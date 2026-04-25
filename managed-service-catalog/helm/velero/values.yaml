@@ -7,12 +7,20 @@ velero:
   configuration:
     provider: aws
     backupStorageLocation:
-      name: default
-      bucket: velero
-      config:
-        region: minio
-        s3ForcePathStyle: true
-        s3Url: http://192.168.1.10:9000
+      - name: default
+        bucket: velero
+        provider: aws
+        config:
+          region: minio
+          s3ForcePathStyle: true
+          s3Url: http://192.168.1.10:9000
+      - name: offsite
+        bucket: velero-backups
+        provider: aws
+        config:
+          region: auto
+          s3ForcePathStyle: true
+          s3Url: https://YOUR_ACCOUNT_ID.r2.cloudflarestorage.com
     volumeSnapshotLocation:
       name: default
       config:
