@@ -1,0 +1,15 @@
+image:
+  repository: liquibase/liquibase
+  tag: 4.25.0
+
+database:
+  host: postgres-ha-rw.data.svc.cluster.local # Target our new HA Postgres
+  port: 5432
+  name: appdb
+  user: admin
+  existingSecret: postgres-secret
+  secretKey: POSTGRES_PASSWORD
+
+changelog:
+  existingConfigMap: liquibase-changelog
+  fileName: changelog.xml

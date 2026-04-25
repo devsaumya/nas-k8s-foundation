@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: liquibase-migration-{{ .Release.Name }}
+  namespace: data
+spec:
+  template:
+    spec:
+      containers:
+      - name: liquibase
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        command:
+        - liquibase
+        - --url=jdbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}
+        - --username={{ .Values.database.user }}
+        - --password=$(DB_PASSWORD)
+        - --changelog-file=/liquibase/changelog/{{ .Values.changelog.fileName }}
+        - update
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Values.database.existingSecret }}
+              key: {{ .Values.database.secretKey }}
+        volumeMounts:
+        - name: changelog
+          mountPath: /liquibase/changelog
+      volumes:
+      - name: changelog
+        configMap:
+          name: {{ .Values.changelog.existingConfigMap }}
+      restartPolicy: Never
+  backoffLimit: 1
