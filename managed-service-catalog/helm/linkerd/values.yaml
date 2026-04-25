@@ -7,6 +7,8 @@ linkerd-control-plane:
   identity:
     issuer:
       scheme: kubernetes.io/tls
+  identityTrustAnchorsPEM: |
+    # This will be populated by cert-manager
   proxy:
     image:
       name: cr.l5d.io/linkerd/proxy

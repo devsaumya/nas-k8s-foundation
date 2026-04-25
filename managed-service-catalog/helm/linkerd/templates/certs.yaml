@@ -1,0 +1,50 @@
+# --- Linkerd Trust Anchor (Self-Signed) ---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: linkerd-self-signed-issuer
+  namespace: linkerd
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: linkerd-trust-anchor
+  namespace: linkerd
+spec:
+  isCA: true
+  commonName: root.linkerd.cluster.local
+  secretName: linkerd-trust-anchor
+  duration: 87600h # 10 years
+  renewBefore: 360h # 15 days before expiry
+  issuerRef:
+    name: linkerd-self-signed-issuer
+    kind: Issuer
+---
+# --- Linkerd Identity Issuer (Signed by Trust Anchor) ---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: linkerd-trust-anchor-issuer
+  namespace: linkerd
+spec:
+  ca:
+    secretName: linkerd-trust-anchor
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: linkerd-identity-issuer
+  namespace: linkerd
+spec:
+  isCA: true
+  commonName: identity.linkerd.cluster.local
+  dnsNames:
+    - identity.linkerd.cluster.local
+  secretName: linkerd-identity-issuer
+  duration: 48h
+  renewBefore: 24h
+  issuerRef:
+    name: linkerd-trust-anchor-issuer
+    kind: Issuer
