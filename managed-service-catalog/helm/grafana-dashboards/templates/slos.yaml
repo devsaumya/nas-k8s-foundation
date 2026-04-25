@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: platform-slos
+  namespace: monitoring-system
+spec:
+  groups:
+  - name: platform-availability
+    rules:
+    - alert: SLO_HighLatency_Nextcloud
+      expr: histogram_quantile(0.9, sum(rate(http_request_duration_seconds_bucket{service="nextcloud"}[5m])) by (le)) > 0.5
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Nextcloud P90 latency is above 500ms"
+
+    - alert: SLO_ErrorRate_ArgoCD
+      expr: sum(rate(http_requests_total{service="argocd-server", status=~"5.."}[5m])) / sum(rate(http_requests_total{service="argocd-server"}[5m])) > 0.01
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Argo CD error rate is above 1%"
