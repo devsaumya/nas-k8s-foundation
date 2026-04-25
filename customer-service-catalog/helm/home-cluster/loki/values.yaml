@@ -85,3 +85,7 @@ promtail:
       monitoring.instance: home-cluster-prod
     prometheusRule:
       enabled: false
+  # --- Axiom Offsite Logging Integration ---
+  extraClientConfigs: |
+    - url: https://api.axiom.co/v1/datasets/home-cluster/ingest
+      api_key: "${AXIOM_API_KEY}"
