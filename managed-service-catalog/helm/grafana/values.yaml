@@ -1,0 +1,28 @@
+grafana:
+  dashboards:
+    default:
+      iot-overview:
+        json: |
+          {
+            "title": "IoT Overview",
+            "panels": [
+              {
+                "type": "graph",
+                "title": "MQTT Messages",
+                "targets": [
+                  {
+                    "expr": "rate(mqtt_messages_total[1m])"
+                  }
+                ]
+              },
+              {
+                "type": "graph",
+                "title": "Device Count",
+                "targets": [
+                  {
+                    "expr": "count(mqtt_connections)"
+                  }
+                ]
+              }
+            ]
+          }

@@ -1,0 +1,31 @@
+replicaCount: 1
+
+image:
+  repository: nodered/node-red
+  tag: 4.0.0
+
+service:
+  type: ClusterIP
+  port: 1880
+
+env:
+  TZ: Asia/Kolkata
+
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+
+persistence:
+  enabled: true
+  size: 5Gi
+  storageClass: default
+
+ingress:
+  enabled: true
+  hosts:
+    - host: nodered.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: authelia@kubernetescrd
