@@ -7,6 +7,8 @@ on:
       - 'managed-service-catalog/**'
       - 'customer-service-catalog/**'
       - 'config.yaml'
+  pull_request:
+    branches: [ main, staging, dev ]
 
 jobs:
   validate:
@@ -30,7 +32,12 @@ jobs:
           done
           echo "::endgroup::"
 
-      - name: 🔍 Trivy Scan
+      - name: 🧹 Kube-Linter
+        uses: stackrox/kube-linter-action@v1
+        with:
+          directory: managed-service-catalog/helm
+
+      - name: 🛡️ Trivy Scan (Config)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'config'
@@ -48,8 +55,6 @@ jobs:
         run: |
           echo "::group::Argo CD Refresh"
           # Trigger a refresh of the control-plane application
-          # curl -X POST https://${{ secrets.ARGOCD_SERVER }}/api/v1/applications/platform-foundation/sync \
-          #   -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}"
           echo "Sync triggered for platform-foundation."
           echo "::endgroup::"
 
@@ -65,4 +70,5 @@ jobs:
           echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Helm Lint | ${{ needs.validate.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Kube-Linter | ${{ needs.validate.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Argo Sync | ${{ needs.gitops.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
