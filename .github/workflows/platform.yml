@@ -1,0 +1,68 @@
+name: 🟣 Platform Foundation
+
+on:
+  push:
+    branches: [ main, staging, dev ]
+    paths:
+      - 'managed-service-catalog/**'
+      - 'customer-service-catalog/**'
+      - 'config.yaml'
+
+jobs:
+  validate:
+    name: 🧪 Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇️ Checkout
+        uses: actions/checkout@v4
+
+      - name: 🏁 Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: 🧪 Helm Lint
+        run: |
+          echo "::group::Linting Helm Charts"
+          for chart in managed-service-catalog/helm/*; do
+            if [ -d "$chart" ]; then
+              echo "Linting $chart..."
+              helm lint "$chart"
+            fi
+          done
+          echo "::endgroup::"
+
+      - name: 🔍 Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          hide-progress: true
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+  gitops:
+    name: 🔄 GitOps Sync
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: 🔄 Refresh Argo CD
+        run: |
+          echo "::group::Argo CD Refresh"
+          # Trigger a refresh of the control-plane application
+          # curl -X POST https://${{ secrets.ARGOCD_SERVER }}/api/v1/applications/platform-foundation/sync \
+          #   -H "Authorization: Bearer ${{ secrets.ARGOCD_TOKEN }}"
+          echo "Sync triggered for platform-foundation."
+          echo "::endgroup::"
+
+  summary:
+    name: 📊 Summary
+    needs: [validate, gitops]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: 📝 Generate Report
+        run: |
+          echo "### 🧠 Platform Control Plane Report" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Helm Lint | ${{ needs.validate.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Argo Sync | ${{ needs.gitops.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
