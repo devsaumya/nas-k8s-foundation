@@ -1,6 +1,6 @@
 image:
   repository: authelia/authelia
-  tag: v4.38.0
+  tag: v4.39.19
 
 domain: "yourdomain.com"
 

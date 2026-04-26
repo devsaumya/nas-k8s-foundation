@@ -5,8 +5,8 @@ ingress:
   path: "/"
   annotations: {}
 image:
-  tag: v26.4.2
   repository: b4bz/homer
+  tag: v26.4.1
   pullPolicy: "IfNotPresent"
 container:
   port: 8080

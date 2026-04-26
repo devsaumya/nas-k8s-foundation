@@ -1,6 +1,6 @@
 image:
   repository: liquibase/liquibase
-  tag: 4.25.0
+  tag: 4.30.0-alpine
 
 database:
   host: postgres-ha-rw.data.svc.cluster.local # Target our new HA Postgres

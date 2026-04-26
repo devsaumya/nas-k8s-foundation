@@ -1,6 +1,7 @@
 image:
   repository: lldap/lldap
-  tag: v0.5.0-alpine
+  tag: 2026-03-04-alpine
+  pullPolicy: IfNotPresent
 
 config:
   ldapPort: 3890

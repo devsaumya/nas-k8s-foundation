@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: adguard-home
-        image: adguard/adguardhome:latest
+        image: adguard/adguardhome:v0.107.63
         ports:
         - name: dns-udp
           containerPort: 53
