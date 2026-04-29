@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  mesh.override: |
+    # Map .internal domains directly to the corresponding ClusterIP services
+    # This allows Mesh traffic (WARP) to route natively to k8s services
+    
+    rewrite stop {
+      name regex (.*)\.internal {1}.iot.svc.cluster.local
+      answer name (.*)\.iot\.svc\.cluster\.local {1}.internal
+    }
+    
+    # Example direct overrides if regex rewrite is insufficient:
+    # postgres.internal. 3600 IN CNAME postgres.iot.svc.cluster.local.
+    # mqtt.internal. 3600 IN CNAME mqtt.iot.svc.cluster.local.
+    # k8s.internal. 3600 IN CNAME kubernetes.default.svc.cluster.local.
